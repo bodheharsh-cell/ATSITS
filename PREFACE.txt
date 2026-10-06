@@ -1,0 +1,108 @@
+
+Project Context for AI Coding Agent (Google Antigravity)
+1. PROJECT OBJECTIVE
+This project aims to build an Autonomous, Teachable, Self-Improving Trading System.
+The system is designed to translate human-taught trading strategies into structured, machine-executable rules, validate these rules through historical backtesting, simulate execution via paper trading, and ultimately optimize strategies through controlled experimentation.
+The immediate objective is NOT to make money. The first objective is strictly architectural validation—to prove that the complete pipeline (data ingestion, strategy execution, risk management, and journaling) works reliably.
+2. DOCUMENTATION CLASSIFICATION SYSTEM
+To prevent the silent hallucination of requirements or scope creep, every architectural component and technical decision in this project is strictly governed by the following classification schema:
+DECIDED: Explicitly agreed project requirements that must be implemented.
+PROPOSED: Technically reasonable ideas that have been discussed but are NOT yet locked as requirements. The coding agent may evaluate them during implementation.
+OPEN QUESTION: A decision is required before implementation and has not yet been made by the human Strategy Authority.
+FUTURE: Capabilities or integrations intended for a later phase of development. Do not implement prematurely.
+OUT OF SCOPE: Features or systems we explicitly do not want implemented at the current stage.
+Never upgrade a PROPOSED or FUTURE idea into a DECIDED requirement.
+3. ROLES AND THE CORE ARCHITECTURAL RELATIONSHIP
+The system functions through a strictly defined hierarchy of authorities. The most important architectural relationship to preserve is:
+HUMAN ↓ (provides strategy knowledge, corrections, and approval) GEMINI ↓ (extracts, structures, analyzes, and communicates) VERIFIED STRATEGY SPECIFICATION ↓ (acts as the explicit, locked rule set) TRADING BOT ↓ (performs deterministic strategy execution) BROKER / PAPER EXECUTION
+Entity Definitions:
+The Human (Strategy Authority): The absolute authority on strategy. Provides knowledge, resolves ambiguities, and holds the final verification authority over strategy rules.
+Gemini (Reasoning/Translation Layer): The natural-language interface. Processes transcripts, extracts rules, identifies ambiguities, and analyzes trade data. Gemini is NOT the execution brain and is NOT the source of truth. It must not silently invent strategy rules.
+Antigravity (Development Agent): Your role. You build and maintain the software. Antigravity is NOT the trading brain. You must work incrementally and ask for clarification on OPEN QUESTIONS.
+The Trading Bot (Core Engine): The deterministic local software environment. It ingests data, evaluates the verified strategy, executes trades, and records facts.
+4. CORE PHILOSOPHY AND PRINCIPLES
+The system must be built adhering to the following DECIDED principles:
+Start simple. Build incrementally.
+Validate each phase before proceeding to the next.
+The human remains the ultimate strategy authority.
+The deterministic trading engine is the execution authority.
+Gemini must never silently invent strategy rules or fabricate trade facts.
+Human verification is required for newly extracted strategy rules; the verified strategy specification is the source of truth.
+Trading facts must originate from the deterministic system. Gemini can provide interpretation/analysis separately.
+Strategy versions must be preserved.
+Self-improvement should use controlled experiments, changing one meaningful variable at a time.
+Historical backtesting must protect against look-ahead bias and data leakage.
+Realistic transaction costs and slippage matter, though the initial model can be simple and configurable.
+Paper and/or shadow validation must precede live trading. 
+The system should remain useful and functional even if Gemini is unavailable.
+Initial development is local-first. The architecture should remain portable for future cloud deployment.
+Future complexity must not be implemented prematurely.
+5. CORE SYSTEM ARCHITECTURE
+The system should focus strictly on the following data pipeline for the early phases: Market Data → Strategy Engine → Setup Detection → Risk Engine → Trade Execution → Trade Journal
+Execution Architecture (PROPOSED): An Event-Driven Architecture is proposed, as it could help maintain consistency between backtesting, paper trading, and live execution. However, Antigravity must evaluate the implementation approach during the relevant phase. Vectorized backtesting is not explicitly forbidden if deemed appropriate for certain tasks.
+Risk Engine (DECIDED): A basic risk engine is required early on (handling position sizing, maximum risk per trade, and basic exposure checks).
+Advanced Risk & Portfolio Management (FUTURE / PROPOSED): Advanced features (portfolio correlation, complex optimization, advanced drawdown controls, emergency kill switches) are explicitly intended for later phases. Do not build a sophisticated portfolio manager for V1.
+6. STRATEGY TEACHING AND VERIFICATION
+The goal is to avoid accidentally creating an algorithm that differs from the strategy actually taught.
+Human provides raw material (e.g., lecture transcripts).
+Gemini extracts concepts and rules.
+Ambiguity Detection: Gemini flags subjective terms (e.g., "strong displacement") instead of inventing numerical definitions.
+Human Verification: The human defines the parameters.
+Executable Strategy: A structured, machine-readable specification is created and locked.
+Testing/Trading: The deterministic bot executes the specification.
+7. STRATEGIES
+7.1 Initial Strategy: 20/50 EMA Trend + Pullback (DECIDED)
+This strategy is intentionally simple. Its purpose is to validate the infrastructure (data, setup, risk, execution, journaling), not to claim profitability.
+Long: EMA20 > EMA50, pullback toward EMA20, bullish confirmation.
+Short: EMA20 < EMA50, pullback toward EMA20, bearish confirmation.
+OPEN QUESTIONS (Must be defined by the Human before Phase 1 implementation):
+Exact definition of "pullback toward EMA20".
+Exact bullish/bearish confirmation.
+Exact stop-loss and take-profit methodology. (Antigravity must not invent these definitions or turn this into a sophisticated quantitative model.)
+7.2 Future Strategy: ICT (FUTURE)
+Inner Circle Trader (ICT) concepts (Market Structure, Liquidity, FVGs) are the intended long-term target. Do not assume ICT is one fully specified algorithm. It will be taught concept-by-concept using the teaching pipeline in a later phase. OUT OF SCOPE for initial phases.
+8. TRADE JOURNAL: FACTS VS. INTERPRETATION
+System Facts (DECIDED): Prices, timestamps, indicators, signals, entries, exits, fills, P&L, positions, orders, and risk calculations must originate deterministically from the trading engine.
+Gemini Interpretation (DECIDED): Gemini may add qualitative explanations, hypotheses, or research notes to a separate layer or column. Gemini must never overwrite factual execution data.
+9. LEARNING, EXPERIMENTATION & BACKTESTING
+The system will eventually generate hypotheses for strategy improvements.
+Validation (DECIDED): Candidate strategy versions must be evaluated against defined performance and robustness criteria on appropriate unseen/out-of-sample data.
+Walk-Forward Analysis (PROPOSED / FUTURE): WFA is a proposed methodology for out-of-sample validation, but specific rolling windows, embargo periods, and validation methodologies will be decided when the learning phase is implemented.
+Transaction Costs (DECIDED): Backtesting must account for realistic costs. A simple/configurable cost model is sufficient initially. Advanced market impact models (e.g., Almgren-Chriss) are PROPOSED/FUTURE.
+10. GEMINI + MCP INTEGRATION
+The Model Context Protocol (MCP) will serve as the communication layer.
+Concept (DECIDED): Gemini ↔ MCP ↔ Local Trading System.
+Implementation (PROPOSED): Specific endpoints, URIs, and JSON schemas (e.g., mcp://journal/recent_trades, run_backtest(), run_experiment()) are proposed examples. The exact tools will be finalized during Phase 6.
+11. EXECUTION MODES & LIVE TRADING
+The system must distinguish between distinct execution modes:
+BACKTEST: Historical simulation.
+PAPER: Forward testing with simulated execution.
+SHADOW: To be introduced when appropriate.
+LIVE: Real-money execution.
+Live Trading Policy (DECIDED): Real-money trading is explicitly OUT OF SCOPE during initial development. It will only be considered after extensive paper/shadow validation, robust testing, implemented risk controls, evidence of reliability, and explicit human approval.
+12. MARKET AND PLATFORM DIRECTION
+Crypto (DECIDED): Initial development will focus on Crypto, specifically Binance. Target assets: BTCUSDT, ETHUSDT, SOLUSDT.
+Indian Markets & Commodities (FUTURE): NSE/BSE/MCX via brokers like Upstox are future expansion areas. Do not build them now.
+13. DEVELOPMENT PHASES
+Antigravity must follow this roadmap incrementally. Understand requirements, plan, implement the smallest useful version, test, fix, and demonstrate before moving on.
+PHASE 0 — Foundation: Project structure, configuration, basic models, tests.
+PHASE 1 — Simple Strategy + Backtester: BTCUSDT historical data, EMA strategy implementation, basic backtester.
+PHASE 2 — Trading Journal: Detailed factual trade records, rejected setups, strategy versioning.
+PHASE 3 — Live Market Observer: Live data ingestion, strategy evaluation (no execution).
+PHASE 4 — Paper Trading: Simulated orders tracked against live data.
+PHASE 5 — Learning + Experiment Engine: Out-of-sample performance evaluation and comparison of candidate strategies.
+PHASE 6 — Gemini + MCP: MCP interface, natural-language analysis via LLM.
+PHASE 7 — Strategy Teaching Pipeline: Concept extraction, ambiguity detection, human verification.
+PHASE 8 — ICT: Teach and formalize ICT concepts.
+PHASE 9 — Multi-asset / Multi-broker: Abstraction for new APIs (e.g., Indian brokers).
+PHASE 10 — Long-term Autonomous System: Cloud operation, advanced portfolio management, 24/7 autonomous research loops.
+14. CURRENT OUT OF SCOPE
+Do not prematurely implement:
+Real-money execution.
+Advanced portfolio management or complex risk overlays.
+Unrestricted autonomous code modification.
+Reinforcement learning or multi-agent swarms.
+Complex macro/news models, fundamental data delays, or survivorship bias universes.
+Distributed cloud/Kubernetes infrastructure.
+ICT concepts (until the foundation is proven).
+End of Document. Await human instruction before initiating Phase 0.

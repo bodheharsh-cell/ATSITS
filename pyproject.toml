@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atsits"
+version = "0.1.0"
+description = "Autonomous, Teachable, Self-Improving Trading System"
+readme = "PREFACE.txt"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2.0.0",
+    "google-genai>=2.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.20.0",
+]
+
+[project.scripts]
+atsits = "atsits.cli:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]

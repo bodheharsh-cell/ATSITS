@@ -1,0 +1,1292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ATSITS — Algorithmic Trading Research GUI</title>
+  <style>
+    :root {
+      --bg-dark: #0f172a;
+      --bg-card: #1e293b;
+      --bg-input: #334155;
+      --border-color: #475569;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --accent: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    /* Top Header */
+    header {
+      background: #090d16;
+      border-bottom: 1px solid var(--border-color);
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .brand-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+    .brand-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: normal;
+      margin-left: 8px;
+    }
+    .status-badges {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      padding: 4px 10px;
+      border-radius: 9999px;
+      background: #1e293b;
+      border: 1px solid var(--border-color);
+    }
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    .dot-online { background-color: var(--success); box-shadow: 0 0 6px var(--success); }
+    .dot-offline { background-color: var(--danger); }
+    .dot-warning { background-color: var(--warning); box-shadow: 0 0 6px var(--warning); }
+    .dot-ready { background-color: var(--primary); }
+
+    /* Layout */
+    .app-container {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    /* Sidebar */
+    sidebar {
+      width: 200px;
+      background: #111827;
+      border-right: 1px solid var(--border-color);
+      display: flex;
+      flex-direction: column;
+      padding: 12px 0;
+      flex-shrink: 0;
+    }
+    .nav-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 20px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      text-align: left;
+      transition: all 0.15s ease;
+      width: 100%;
+    }
+    .nav-btn:hover {
+      background: #1e293b;
+      color: #fff;
+    }
+    .nav-btn.active {
+      background: #1e293b;
+      color: var(--primary);
+      border-left: 3px solid var(--primary);
+      font-weight: 600;
+    }
+
+    /* Main Content Area */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-dark);
+      overflow-y: auto;
+      padding: 20px;
+    }
+    .tab-content { display: none; height: 100%; flex-direction: column; }
+    .tab-content.active { display: flex; }
+
+    /* Cards & Containers */
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #fff;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Form Controls */
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 10px 14px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    button.btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s;
+    }
+    button.btn:hover { background: var(--primary-hover); }
+    button.btn-success { background: var(--success); }
+    button.btn-success:hover { background: #059669; }
+    button.btn-danger { background: var(--danger); }
+    button.btn-danger:hover { background: #dc2626; }
+    button.btn-secondary { background: #475569; }
+    button.btn-secondary:hover { background: #64748b; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    /* Chat Tab */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 12px 16px;
+      border-radius: 8px;
+      font-size: 0.92rem;
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .message.user {
+      align-self: flex-end;
+      background: var(--primary);
+      color: #fff;
+      border-bottom-right-radius: 2px;
+    }
+    .message.assistant {
+      align-self: flex-start;
+      background: #334155;
+      color: var(--text-main);
+      border-bottom-left-radius: 2px;
+      border: 1px solid #475569;
+    }
+    .message.system {
+      align-self: center;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      border: none;
+    }
+    .mcp-details {
+      margin-top: 8px;
+      padding: 8px 12px;
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-family: monospace;
+      color: #cbd5e1;
+    }
+    .mcp-summary {
+      cursor: pointer;
+      color: #60a5fa;
+      font-weight: 600;
+      user-select: none;
+    }
+    .chat-input-bar {
+      padding: 14px;
+      background: #0f172a;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+    .chat-input-bar textarea {
+      margin-bottom: 0;
+      resize: none;
+      height: 42px;
+    }
+
+    /* Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+      text-align: left;
+    }
+    table.data-table th, table.data-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-color);
+    }
+    table.data-table th {
+      background: #0f172a;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    table.data-table tr:hover {
+      background: #334155;
+    }
+
+    /* Metrics Grid */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin-bottom: 16px;
+    }
+    .metric-box {
+      background: #0f172a;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 14px;
+    }
+    .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+    .metric-value { font-size: 1.3rem; font-weight: 700; margin-top: 4px; color: #fff; }
+    .metric-positive { color: var(--success); }
+    .metric-negative { color: var(--danger); }
+
+    /* Bottom Footer Bar */
+    footer {
+      background: #090d16;
+      border-top: 1px solid var(--border-color);
+      padding: 8px 24px;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div style="display: flex; align-items: center;">
+      <span class="brand-title">ATSITS</span>
+      <span class="brand-subtitle">Algorithmic Trading Research & Teaching GUI</span>
+    </div>
+    <div class="status-badges">
+      <div class="badge" id="gemini-model-badge" style="gap: 6px;">
+        <span style="color: var(--text-muted); font-size: 0.8rem;">Model:</span>
+        <select id="gemini-model-select" onchange="onModelChange(this.value)" style="background: #0f172a; color: #60a5fa; border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.8rem; font-weight: 500; outline: none; cursor: pointer;">
+          <option value="" disabled selected>Loading models...</option>
+        </select>
+      </div>
+      <div class="badge" id="gemini-badge">
+        <span class="dot dot-offline" id="gemini-dot"></span>
+        <span id="gemini-status-text">Gemini Checking...</span>
+      </div>
+      <div class="badge">
+        <span class="dot dot-ready"></span>
+        <span>MCP Ready (<span id="mcp-count">19</span> tools)</span>
+      </div>
+      <div class="badge">
+        <span class="dot dot-online"></span>
+        <span>ATSITS Engine Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="app-container">
+    <!-- Sidebar -->
+    <sidebar>
+      <button class="nav-btn active" onclick="switchTab('chat')">💬 Chat</button>
+      <button class="nav-btn" onclick="switchTab('teach')">🎓 Teach</button>
+      <button class="nav-btn" onclick="switchTab('strategy')">📈 Strategy</button>
+      <button class="nav-btn" onclick="switchTab('backtest')">📊 Backtest</button>
+      <button class="nav-btn" onclick="switchTab('paper')">📝 Paper Trading</button>
+      <button class="nav-btn" onclick="switchTab('journal')">📖 Journal</button>
+      <button class="nav-btn" onclick="switchTab('experiments')">🔬 Experiments</button>
+    </sidebar>
+
+    <!-- Main Content Panels -->
+    <main>
+      <!-- 1. CHAT TAB -->
+      <section id="tab-chat" class="tab-content active">
+        <div class="chat-container">
+          <div class="chat-messages" id="chat-messages">
+            <div class="message system">ATSITS Intelligent Reasoning Session Ready. Gemini communicates strictly via MCP tools.</div>
+          </div>
+          <div class="chat-input-bar">
+            <textarea id="chat-input" placeholder="Ask Gemini about strategies, performance, market state, or research..." onkeydown="handleChatKey(event)"></textarea>
+            <button class="btn" id="btn-chat-send" onclick="sendChatMessage()">Send</button>
+            <button class="btn btn-secondary" onclick="resetChat()">Reset</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 2. TEACH TAB -->
+      <section id="tab-teach" class="tab-content">
+        <div class="card">
+          <div class="card-title">Strategy Teaching Pipeline (Human Authority Protected)</div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+            Paste strategy rules, concepts, or indicators below. The extraction engine will structure the rules and detect ambiguities.
+          </p>
+          <textarea id="teach-text" rows="5" placeholder="e.g. Enter Long when 20 EMA crosses above 50 EMA on 1H candle. Place Stop Loss below swing low, Take Profit at 2.0R..."></textarea>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn" id="btn-teach-extract" onclick="extractTeachingDraft()">Ingest & Extract Draft</button>
+            <button class="btn btn-secondary" onclick="document.getElementById('teach-text').value=''">Clear</button>
+          </div>
+        </div>
+
+        <div id="teach-draft-card" class="card" style="display: none;">
+          <div class="card-title">
+            <span>Extracted Strategy Draft: <span id="draft-name" style="color: var(--primary);"></span></span>
+            <span class="badge" id="draft-status-badge">STATUS: DRAFT</span>
+          </div>
+
+          <div style="margin-bottom: 14px; font-size: 0.9rem;">
+            <strong>Timeframe:</strong> <span id="draft-timeframe">1H</span> |
+            <strong>Concepts:</strong> <span id="draft-concepts">EMA, Stop Loss</span>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <strong style="display: block; margin-bottom: 8px;">Extracted Rules (<span id="draft-rules-count">0</span>):</strong>
+            <div id="draft-rules-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+          </div>
+
+          <div style="margin-bottom: 16px;" id="missing-info-section">
+            <strong style="display: block; margin-bottom: 8px; color: var(--warning);">Missing Parameters / Unresolved Items:</strong>
+            <div id="draft-missing-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+          </div>
+
+          <!-- Mandatory Human Review Gate -->
+          <div style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 16px; margin-top: 16px;">
+            <strong style="display: block; margin-bottom: 8px; color: #fff;">Mandatory Human Operator Review Gate:</strong>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+              <button class="btn btn-success" onclick="reviewAction('APPROVE')">✓ Approve All Rules</button>
+              <button class="btn btn-secondary" onclick="reviewAction('CLARIFY')">✎ Save Clarifications</button>
+              <button class="btn btn-danger" onclick="reviewAction('REJECT')">✕ Reject Draft</button>
+              <button class="btn" style="background: var(--accent);" onclick="reviewAction('VERIFY')">🔒 Verify Strategy Gate</button>
+            </div>
+            <div id="review-feedback" style="margin-top: 10px; font-size: 0.85rem;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. STRATEGY TAB -->
+      <section id="tab-strategy" class="tab-content">
+        <div class="card">
+          <div class="card-title">Production Strategy Specification (Locked Baseline)</div>
+          <table class="data-table" style="margin-top: 10px;">
+            <tbody>
+              <tr><th>Strategy Identifier</th><td><strong>EMA_Pullback_v1.0</strong> (Version: 1.0.0)</td></tr>
+              <tr><th>Lock Status</th><td><span class="badge" style="color: var(--success); border-color: var(--success);">PRODUCTION LOCKED</span></td></tr>
+              <tr><th>Market / Timeframe</th><td>BTCUSDT / 1H</td></tr>
+              <tr><th>Indicators</th><td>Fast EMA: 20 | Slow EMA: 50</td></tr>
+              <tr><th>Entry Trigger</th><td>Close above 20 EMA after qualifying pullback low</td></tr>
+              <tr><th>Risk & Stops</th><td>Stop Loss at Pullback Low | Take Profit at 2.0R</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Verified Strategy Specifications</div>
+          <div id="verified-strategies-list">
+            <p style="color: var(--text-muted); font-size: 0.88rem;">No custom verified strategies created yet. Teach and verify a draft to add one.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. BACKTEST TAB -->
+      <section id="tab-backtest" class="tab-content">
+        <div class="card">
+          <div class="card-title">Run Deterministic Backtest</div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 12px;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted);">Strategy</label>
+              <select id="bt-strategy">
+                <option value="EMA_Pullback_v1.0">EMA_Pullback_v1.0 (Locked Baseline)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted);">Symbol</label>
+              <input type="text" id="bt-symbol" value="BTCUSDT" disabled />
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted);">Initial Equity ($)</label>
+              <input type="number" id="bt-equity" value="10000" min="100" max="1000000" />
+            </div>
+          </div>
+          <button class="btn" id="btn-run-backtest" onclick="runBacktest()">Run Backtest Engine</button>
+        </div>
+
+        <div id="backtest-results-card" class="card" style="display: none;">
+          <div class="card-title">Backtest Execution Summary</div>
+          <div class="metrics-grid">
+            <div class="metric-box"><div class="metric-label">Total Net P&L</div><div class="metric-value" id="bt-net-pnl">$-306.09</div></div>
+            <div class="metric-box"><div class="metric-label">Return %</div><div class="metric-value" id="bt-return">-3.06%</div></div>
+            <div class="metric-box"><div class="metric-label">Win Rate</div><div class="metric-value" id="bt-win-rate">33.33%</div></div>
+            <div class="metric-box"><div class="metric-label">Total Trades</div><div class="metric-value" id="bt-trades">201</div></div>
+            <div class="metric-box"><div class="metric-label">Profit Factor</div><div class="metric-value" id="bt-profit-factor">0.98</div></div>
+            <div class="metric-box"><div class="metric-label">Max Drawdown</div><div class="metric-value" id="bt-max-dd">13.80%</div></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. JOURNAL TAB -->
+      <section id="tab-journal" class="tab-content">
+        <div class="card">
+          <div class="card-title">Factual Trading Journal Records</div>
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="journal-table">
+              <thead>
+                <tr>
+                  <th>Trade ID</th>
+                  <th>Entry Time</th>
+                  <th>Exit Time</th>
+                  <th>Dir</th>
+                  <th>Entry Price</th>
+                  <th>Exit Price</th>
+                  <th>Net P&L ($)</th>
+                  <th>Exit Reason</th>
+                </tr>
+              </thead>
+              <tbody id="journal-tbody">
+                <tr><td colspan="8" style="text-align: center; color: var(--text-muted);">Loading journal records...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. EXPERIMENTS TAB -->
+      <section id="tab-experiments" class="tab-content">
+        <div class="card">
+          <div class="card-title">Research Experiment Registry</div>
+          <div id="experiments-list">
+            <p style="color: var(--text-muted); font-size: 0.88rem;">Loading experiments...</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. PAPER TRADING TAB (Phase 9) -->
+      <section id="tab-paper" class="tab-content">
+        <!-- Live Connection & Market Header -->
+        <div class="card">
+          <div class="card-title">
+            <span>Binance Market Data & Paper Engine</span>
+            <div style="display: flex; gap: 8px;">
+              <button class="btn btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;" onclick="loadPaperData()">↻ Refresh</button>
+            </div>
+          </div>
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <div class="metric-label">Market Data Feed</div>
+              <div class="metric-value" id="paper-market-status" style="font-size: 0.95rem;">Checking...</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Binance Read-Only Account</div>
+              <div class="metric-value" id="paper-account-status" style="font-size: 0.95rem;">Checking...</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Pair & Timeframe</div>
+              <div class="metric-value" id="paper-symbol-tf">BTCUSDT / 1H</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Live BTC Price</div>
+              <div class="metric-value" id="paper-live-price" style="color: var(--primary);">--</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Strategy & Indicator State -->
+        <div class="card">
+          <div class="card-title">Strategy Engine: EMA20/30 Pullback + 3R</div>
+          <div class="metrics-grid" style="margin-bottom: 14px;">
+            <div class="metric-box">
+              <div class="metric-label">Strategy Version</div>
+              <div class="metric-value" id="paper-strat-version" style="font-size: 0.9rem;">EMA_Pullback_EMA20_30_3R</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">EMA20 (Fast)</div>
+              <div class="metric-value" id="paper-ema20">--</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">EMA30 (Slow)</div>
+              <div class="metric-value" id="paper-ema30">--</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Target Reward (R)</div>
+              <div class="metric-value" id="paper-rr">3.0R</div>
+            </div>
+          </div>
+
+          <div style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 14px; font-size: 0.88rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span><strong>Warmup Status:</strong> <span id="paper-warmup-status">Checking...</span></span>
+              <span><strong>Candles Processed:</strong> <span id="paper-candles-count">0</span></span>
+              <span><strong>Trend:</strong> <span id="paper-trend">--</span></span>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong>Last Completed 1H Candle:</strong>
+              <span id="paper-last-candle" style="color: var(--text-muted); font-family: monospace;">No candle processed yet</span>
+            </div>
+            <div>
+              <strong>Latest Strategy Decision:</strong>
+              <span id="paper-strategy-decision" class="badge" style="margin-left: 6px;">Idle</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Paper Account & Active Position -->
+        <div class="card">
+          <div class="card-title">Paper Account & Position (Synthetic $10,000 Equity)</div>
+          <div class="metrics-grid" style="margin-bottom: 16px;">
+            <div class="metric-box">
+              <div class="metric-label">Paper Equity</div>
+              <div class="metric-value" id="paper-equity">$10,000.00</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Cash Balance</div>
+              <div class="metric-value" id="paper-cash">$10,000.00</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Realized P&L</div>
+              <div class="metric-value" id="paper-realized-pnl">$0.00</div>
+            </div>
+            <div class="metric-box">
+              <div class="metric-label">Paper Trades</div>
+              <div class="metric-value" id="paper-trade-count">0</div>
+            </div>
+          </div>
+
+          <!-- Active Position Sub-card -->
+          <div id="paper-position-box" style="background: #0f172a; border: 1px solid var(--border-color); border-radius: 6px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <strong>Active Paper Position</strong>
+              <button class="btn btn-danger" id="btn-close-position" style="display: none; padding: 6px 12px; font-size: 0.8rem;" onclick="closeActivePaperPosition()">Close Position (Market)</button>
+            </div>
+            <div id="paper-position-details" style="color: var(--text-muted); font-size: 0.9rem;">
+              No open paper position.
+            </div>
+          </div>
+        </div>
+
+        <!-- Manual Simulated Order Panel -->
+        <div class="card">
+          <div class="card-title">Simulate Paper Order (Testing Only — Zero Real Execution)</div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 12px;">
+            All trades are 100% simulated within the synthetic paper account. No real Binance order will ever be placed.
+          </p>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 12px;">
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Side</label>
+              <select id="paper-order-side" style="margin-bottom: 0;">
+                <option value="BUY">BUY (Long)</option>
+                <option value="SELL">SELL (Short)</option>
+              </select>
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Quantity (BTC)</label>
+              <input type="number" id="paper-order-qty" value="0.01" step="0.001" style="margin-bottom: 0;">
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Stop Loss ($)</label>
+              <input type="number" id="paper-order-sl" placeholder="e.g. 80000" step="0.1" style="margin-bottom: 0;">
+            </div>
+            <div>
+              <label style="font-size: 0.8rem; color: var(--text-muted); display: block; margin-bottom: 4px;">Take Profit ($)</label>
+              <input type="number" id="paper-order-tp" placeholder="e.g. 90000" step="0.1" style="margin-bottom: 0;">
+            </div>
+          </div>
+          <button class="btn" onclick="submitPaperOrder()">Submit Paper Order</button>
+        </div>
+
+        <!-- Paper Trades History Table -->
+        <div class="card">
+          <div class="card-title">Completed Paper Trades</div>
+          <div style="overflow-x: auto;">
+            <table class="data-table" id="paper-trades-table">
+              <thead>
+                <tr>
+                  <th>Trade ID</th>
+                  <th>Source</th>
+                  <th>Direction</th>
+                  <th>Entry Price</th>
+                  <th>Exit Price</th>
+                  <th>Stop Loss</th>
+                  <th>Target (3R)</th>
+                  <th>Net P&L ($)</th>
+                  <th>R-Mult</th>
+                  <th>Exit Reason</th>
+                </tr>
+              </thead>
+              <tbody id="paper-trades-tbody">
+                <tr><td colspan="10" style="text-align: center; color: var(--text-muted);">No paper trades recorded yet.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Bottom Footer -->
+  <footer>
+    <div>Mode: <strong>RESEARCH</strong> | Production Strategy: <strong>EMA_Pullback_v1.0</strong> | Host: <strong>127.0.0.1</strong></div>
+    <div>Authority: <strong>HUMAN OPERATOR (Supreme)</strong></div>
+  </footer>
+
+  <script>
+    let currentDraftId = null;
+    let availableModels = [];
+
+    async function loadModels() {
+      try {
+        const res = await fetch('/api/models');
+        const data = await res.json();
+        const select = document.getElementById('gemini-model-select');
+        select.innerHTML = '';
+
+        // 1. Automatic Task-Aware Router option
+        const autoOpt = document.createElement('option');
+        autoOpt.value = 'auto';
+        autoOpt.innerText = '⚡ Auto Router (Task-Aware)';
+        if (data.mode === 'AUTO') {
+          autoOpt.selected = true;
+        }
+        select.appendChild(autoOpt);
+
+        // 2. Individual supported models
+        availableModels = data.models || [];
+        availableModels.forEach(m => {
+          const opt = document.createElement('option');
+          opt.value = m.model_id;
+          let label = m.display_name;
+          if (data.health && data.health[m.model_id]) {
+            const h = data.health[m.model_id];
+            if (!h.is_available) {
+              label += ` (${Math.round(h.cooldown_remaining_sec)}s cooldown)`;
+            }
+          }
+          opt.innerText = label;
+          if (data.mode === 'MANUAL' && m.model_id === data.active_model_id) {
+            opt.selected = true;
+          }
+          select.appendChild(opt);
+        });
+      } catch (e) {
+        console.error('Failed to load supported Gemini models:', e);
+      }
+    }
+
+    async function onModelChange(newModelId) {
+      if (!newModelId) return;
+      const select = document.getElementById('gemini-model-select');
+      select.disabled = true;
+      try {
+        const payload = newModelId === 'auto'
+          ? { model_id: 'auto', mode: 'AUTO', persist: true }
+          : { model_id: newModelId, mode: 'MANUAL', persist: true };
+        const res = await fetch('/api/model', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          const container = document.getElementById('chat-messages');
+          const sysMsg = document.createElement('div');
+          sysMsg.className = 'message system';
+          sysMsg.innerText = data.mode === 'AUTO'
+            ? `Active Gemini mode switched to: ⚡ Automatic Task-Aware Model Router`
+            : `Active Gemini model manually set to: ${data.display_name} (${data.model_id})`;
+          container.appendChild(sysMsg);
+          container.scrollTop = container.scrollHeight;
+          await checkStatus();
+        } else {
+          alert('Failed to switch model: ' + (data.error || 'Unknown error'));
+          await loadModels();
+        }
+      } catch (e) {
+        alert('Model switch request failed: ' + e.message);
+        await loadModels();
+      } finally {
+        select.disabled = false;
+      }
+    }
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      const activeBtn = Array.from(document.querySelectorAll('.nav-btn')).find(b => b.getAttribute('onclick').includes(tabId));
+      if (activeBtn) activeBtn.classList.add('active');
+      const targetTab = document.getElementById('tab-' + tabId);
+      if (targetTab) targetTab.classList.add('active');
+
+      if (tabId === 'strategy') loadStrategyData();
+      if (tabId === 'journal') loadJournalData();
+      if (tabId === 'experiments') loadExperimentsData();
+      if (tabId === 'paper') loadPaperData();
+    }
+
+    async function checkStatus() {
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        const dot = document.getElementById('gemini-dot');
+        const text = document.getElementById('gemini-status-text');
+        if (data.gemini_online) {
+          dot.className = 'dot dot-online';
+          const modelDisplay = data.gemini_model_display || data.gemini_model;
+          text.innerText = 'Gemini Connected (' + modelDisplay + ')';
+        } else if (data.gemini_status === 'QUOTA_EXHAUSTED') {
+          dot.className = 'dot dot-warning';
+          text.innerText = 'Gemini Quota Limited';
+        } else if (data.gemini_status === 'NOT_CONFIGURED') {
+          dot.className = 'dot dot-offline';
+          text.innerText = 'Gemini Offline (No Key)';
+        } else {
+          dot.className = 'dot dot-offline';
+          text.innerText = 'Gemini Offline';
+        }
+        document.getElementById('mcp-count').innerText = data.mcp_tool_count || 19;
+      } catch (e) {
+        console.error('Status check error:', e);
+      }
+    }
+
+    // Chat
+    function handleChatKey(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChatMessage();
+      }
+    }
+
+    async function sendChatMessage() {
+      const input = document.getElementById('chat-input');
+      const text = input.value.trim();
+      if (!text) return;
+
+      const container = document.getElementById('chat-messages');
+      const userMsg = document.createElement('div');
+      userMsg.className = 'message user';
+      userMsg.innerText = text;
+      container.appendChild(userMsg);
+      input.value = '';
+      container.scrollTop = container.scrollHeight;
+
+      const assistantMsg = document.createElement('div');
+      assistantMsg.className = 'message assistant';
+      assistantMsg.innerText = 'Thinking and executing MCP tools...';
+      container.appendChild(assistantMsg);
+      container.scrollTop = container.scrollHeight;
+
+      const sendBtn = document.getElementById('btn-chat-send');
+      sendBtn.disabled = true;
+
+      try {
+        const res = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        const data = await res.json();
+        if (data.error_code === 'CRITICAL_DOWNGRADE_PREVENTED') {
+          assistantMsg.innerHTML = `<div style="color: #ef4444; font-weight: 600; margin-bottom: 4px;">🛑 Critical Downgrade Prevented</div><div>${data.message || data.error}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">Safety Boundary: Critical strategy verification tasks cannot run on downgraded models.</div>`;
+        } else if (data.error_code === 'ALL_MODELS_UNAVAILABLE') {
+          assistantMsg.innerHTML = `<div style="color: var(--warning); font-weight: 600; margin-bottom: 4px;">⚠️ All Candidate Models Unavailable</div><div>${data.message || data.error}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">All candidate models are in cooldown. Please wait a few moments.</div>`;
+        } else if (data.error_code === 'QUOTA_EXHAUSTED' || (data.error && data.error.includes('quota'))) {
+          assistantMsg.innerHTML = `<div style="color: var(--warning); font-weight: 600; margin-bottom: 4px;">⚠️ Model Quota Reached</div><div>${data.message || data.error}</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 6px;">💡 Switch to another model in the top header selector to continue.</div>`;
+        } else if (data.error) {
+          assistantMsg.innerText = 'Error: ' + data.error;
+        } else {
+          assistantMsg.innerText = data.response;
+          if (data.mcp_calls && data.mcp_calls.length > 0) {
+            const details = document.createElement('details');
+            details.className = 'mcp-details';
+            const summary = document.createElement('summary');
+            summary.className = 'mcp-summary';
+            summary.innerText = `🔍 MCP Tool Invocations (${data.mcp_calls.length})`;
+            details.appendChild(summary);
+
+            data.mcp_calls.forEach(call => {
+              const row = document.createElement('div');
+              row.style.marginTop = '4px';
+              row.innerText = `• ${call.name}(${JSON.stringify(call.args)}) -> ${call.is_error ? 'ERROR' : 'OK'}`;
+              details.appendChild(row);
+            });
+            assistantMsg.appendChild(details);
+          }
+
+          if (data.routing) {
+            const badge = document.createElement('div');
+            badge.style.fontSize = '0.75rem';
+            badge.style.color = '#94a3b8';
+            badge.style.marginTop = '8px';
+            badge.style.borderTop = '1px solid rgba(255,255,255,0.08)';
+            badge.style.paddingTop = '4px';
+            if (data.routing.mode === 'AUTO') {
+              let tag = `⚡ [AUTO] Task: ${data.routing.task_class} → Model: ${data.model}`;
+              if (data.routing.fallback_attempt > 0) {
+                tag += ` (Fallback from ${data.routing.previous_model} via ${data.routing.failure_reason})`;
+              }
+              badge.innerText = tag;
+            } else {
+              badge.innerText = `⚙️ [MANUAL] Model: ${data.model}`;
+            }
+            assistantMsg.appendChild(badge);
+          }
+        }
+
+      } catch (e) {
+        assistantMsg.innerText = 'Failed to communicate with local server: ' + e.message;
+      } finally {
+        sendBtn.disabled = false;
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+
+    async function resetChat() {
+      await fetch('/api/chat/reset', { method: 'POST' });
+      const container = document.getElementById('chat-messages');
+      container.innerHTML = '<div class="message system">Conversation reset. History cleared from memory.</div>';
+    }
+
+    // Teach
+    async function extractTeachingDraft() {
+      const text = document.getElementById('teach-text').value.trim();
+      if (!text) return alert('Please enter teaching rules or text.');
+
+      const btn = document.getElementById('btn-teach-extract');
+      btn.disabled = true;
+      btn.innerText = 'Extracting...';
+
+      try {
+        const res = await fetch('/api/teach/extract', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        if (data.error) return alert('Extraction error: ' + data.error);
+
+        currentDraftId = data.draft_id;
+        document.getElementById('teach-draft-card').style.display = 'block';
+        document.getElementById('draft-name').innerText = data.strategy_name;
+        document.getElementById('draft-status-badge').innerText = 'STATUS: ' + data.status;
+        document.getElementById('draft-timeframe').innerText = data.timeframe || 'Not specified';
+        document.getElementById('draft-concepts').innerText = (data.concepts || []).join(', ') || 'None';
+        document.getElementById('draft-rules-count').innerText = data.rules.length;
+
+        const rulesList = document.getElementById('draft-rules-list');
+        rulesList.innerHTML = '';
+        data.rules.forEach(r => {
+          const item = document.createElement('div');
+          item.style.padding = '8px';
+          item.style.background = '#0f172a';
+          item.style.borderRadius = '4px';
+          item.style.fontSize = '0.85rem';
+          item.innerHTML = `<strong>[${r.category}]</strong> ${r.statement} <span style="color: var(--primary);">(${r.certainty})</span>`;
+          rulesList.appendChild(item);
+        });
+
+        const missingList = document.getElementById('draft-missing-list');
+        missingList.innerHTML = '';
+        if (!data.missing_information || data.missing_information.length === 0) {
+          missingList.innerHTML = '<span style="color: var(--success); font-size: 0.85rem;">✓ No missing parameters detected.</span>';
+        } else {
+          data.missing_information.forEach(m => {
+            const mDiv = document.createElement('div');
+            mDiv.style.padding = '8px';
+            mDiv.style.background = '#0f172a';
+            mDiv.style.borderRadius = '4px';
+            mDiv.style.fontSize = '0.85rem';
+            mDiv.innerHTML = `<div><strong>${m.item_name}:</strong> ${m.description}</div>
+              <input type="text" id="clarify-${m.missing_id}" placeholder="Provide clarification..." style="margin-top:6px; margin-bottom:0;" />`;
+            missingList.appendChild(mDiv);
+          });
+        }
+      } catch (e) {
+        alert('Extraction failed: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Ingest & Extract Draft';
+      }
+    }
+
+    async function reviewAction(action) {
+      if (!currentDraftId) return alert('No active draft to review.');
+      const feedback = document.getElementById('review-feedback');
+
+      let clarifications = {};
+      if (action === 'CLARIFY') {
+        const inputs = document.querySelectorAll('[id^="clarify-"]');
+        inputs.forEach(inp => {
+          const mId = inp.id.replace('clarify-', '');
+          if (inp.value.trim()) clarifications[mId] = inp.value.trim();
+        });
+      }
+
+      feedback.innerHTML = '<span style="color: var(--text-muted);">Executing review gate...</span>';
+
+      try {
+        const res = await fetch('/api/teach/review', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            draft_id: currentDraftId,
+            action: action,
+            clarifications: clarifications
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          feedback.innerHTML = `<span style="color: var(--success);">✓ ${data.message}</span>`;
+          if (data.status) document.getElementById('draft-status-badge').innerText = 'STATUS: ' + data.status;
+        } else {
+          feedback.innerHTML = `<span style="color: var(--danger);">✕ ${data.message || data.error}</span>`;
+        }
+      } catch (e) {
+        feedback.innerHTML = `<span style="color: var(--danger);">Review request error: ${e.message}</span>`;
+      }
+    }
+
+    // Backtest
+    async function runBacktest() {
+      const equity = parseFloat(document.getElementById('bt-equity').value) || 10000;
+      const btn = document.getElementById('btn-run-backtest');
+      btn.disabled = true;
+      btn.innerText = 'Executing Backtest...';
+
+      try {
+        const res = await fetch('/api/backtest', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ initial_equity: equity, strategy_name: 'EMA_Pullback_v1.0' })
+        });
+        const data = await res.json();
+        document.getElementById('backtest-results-card').style.display = 'block';
+        document.getElementById('bt-net-pnl').innerText = '$' + data.total_net_pnl.toFixed(2);
+        document.getElementById('bt-return').innerText = (data.total_return_pct * 100).toFixed(2) + '%';
+        document.getElementById('bt-win-rate').innerText = (data.win_rate * 100).toFixed(2) + '%';
+        document.getElementById('bt-trades').innerText = `${data.number_of_trades} (${data.winning_trades}W / ${data.losing_trades}L)`;
+        document.getElementById('bt-profit-factor').innerText = data.profit_factor.toFixed(2);
+        document.getElementById('bt-max-dd').innerText = (data.max_drawdown_pct * 100).toFixed(2) + '%';
+      } catch (e) {
+        alert('Backtest execution failed: ' + e.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Run Backtest Engine';
+      }
+    }
+
+    // Strategy
+    async function loadStrategyData() {
+      try {
+        const res = await fetch('/api/strategy');
+        const data = await res.json();
+        const vContainer = document.getElementById('verified-strategies-list');
+        if (data.verified_strategies && data.verified_strategies.length > 0) {
+          vContainer.innerHTML = data.verified_strategies.map(v => `
+            <div style="padding:10px; background:#0f172a; border-radius:6px; margin-bottom:8px;">
+              <strong>${v.name} (v${v.version})</strong> | Status: ${v.status} | Verified by: ${v.verified_by}
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Failed to load strategy data:', e);
+      }
+    }
+
+    // Journal
+    async function loadJournalData() {
+      try {
+        const res = await fetch('/api/journal');
+        const data = await res.json();
+        const tbody = document.getElementById('journal-tbody');
+        if (!data.trades || data.trades.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted);">No trades recorded in journal.</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.trades.slice(-50).reverse().map(t => `
+          <tr>
+            <td>${t.trade_id}</td>
+            <td>${t.entry_time || '-'}</td>
+            <td>${t.exit_time || '-'}</td>
+            <td><strong>${t.direction}</strong></td>
+            <td>$${t.entry_price.toFixed(2)}</td>
+            <td>$${t.exit_price.toFixed(2)}</td>
+            <td style="color:${t.net_pnl >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">$${t.net_pnl.toFixed(2)}</td>
+            <td>${t.exit_reason || '-'}</td>
+          </tr>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load journal:', e);
+      }
+    }
+
+    // Experiments
+    async function loadExperimentsData() {
+      try {
+        const res = await fetch('/api/experiments');
+        const data = await res.json();
+        const container = document.getElementById('experiments-list');
+        if (!data.experiments || data.experiments.length === 0) {
+          container.innerHTML = '<p style="color: var(--text-muted);">No experiments registered yet.</p>';
+          return;
+        }
+        container.innerHTML = data.experiments.map(exp => `
+          <div style="padding: 12px; background: #0f172a; border-radius: 6px; margin-bottom: 10px; border: 1px solid var(--border-color);">
+            <div style="font-weight: 600; color: #fff;">ID: ${exp.experiment_id} | Status: <span style="color: var(--success);">${exp.status}</span></div>
+            <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 4px;">
+              Hypothesis: ${exp.hypothesis_id} | Baseline: ${exp.baseline_strategy_version} | Candidate: ${exp.candidate_strategy_version}
+            </div>
+            <div style="font-size: 0.85rem; margin-top: 4px;">
+              Validation: <strong>${exp.validation_passed ? 'PASSED' : 'NOT PASSED'}</strong> (${exp.validation_summary})
+            </div>
+          </div>
+        `).join('');
+      } catch (e) {
+        console.error('Failed to load experiments:', e);
+      }
+    }
+
+    // Paper Trading (Phase 9)
+    async function loadPaperData() {
+      try {
+        const [sessRes, mktRes, acctRes, posRes, trdRes] = await Promise.all([
+          fetch('/api/paper/session').then(r => r.json()).catch(e => ({ error: e.message })),
+          fetch('/api/paper/market/status').then(r => r.json()).catch(e => ({ error: e.message })),
+          fetch('/api/paper/binance/account').then(r => r.json()).catch(e => ({ error: e.message })),
+          fetch('/api/paper/positions').then(r => r.json()).catch(e => ({ positions: [] })),
+          fetch('/api/paper/trades?limit=20').then(r => r.json()).catch(e => ({ trades: [] })),
+        ]);
+
+        // Market status
+        const mktStatusEl = document.getElementById('paper-market-status');
+        if (mktRes.binance_online) {
+          mktStatusEl.innerHTML = '<span style="color: var(--success);">● ONLINE</span>';
+        } else if (mktRes.paper_session_available === false) {
+          mktStatusEl.innerHTML = '<span style="color: var(--text-muted);">NOT CONFIGURED</span>';
+        } else {
+          mktStatusEl.innerHTML = '<span style="color: var(--danger);">● OFFLINE</span>';
+        }
+
+        // Account status
+        const acctStatusEl = document.getElementById('paper-account-status');
+        if (acctRes.account_type) {
+          acctStatusEl.innerHTML = `<span style="color: var(--success);">● CONNECTED (${acctRes.account_type})</span>`;
+        } else {
+          acctStatusEl.innerHTML = '<span style="color: var(--text-muted);">NOT CONFIGURED (READ-ONLY)</span>';
+        }
+
+        // Session data
+        if (sessRes && sessRes.session_id) {
+          document.getElementById('paper-symbol-tf').innerText = `${sessRes.symbol} / ${sessRes.interval.toUpperCase()}`;
+          if (sessRes.current_price) {
+            document.getElementById('paper-live-price').innerText = '$' + sessRes.current_price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+          }
+          document.getElementById('paper-strat-version').innerText = sessRes.strategy_version;
+          document.getElementById('paper-ema20').innerText = sessRes.ema20 ? '$' + sessRes.ema20.toFixed(2) : '--';
+          document.getElementById('paper-ema30').innerText = sessRes.ema30 ? '$' + sessRes.ema30.toFixed(2) : '--';
+          document.getElementById('paper-rr').innerText = (sessRes.take_profit_rr || 3.0) + 'R';
+
+          document.getElementById('paper-warmup-status').innerText = sessRes.is_warmed_up ? 'Ready (Warmed)' : (sessRes.strategy_ready ? 'Ready' : 'Warming up');
+          document.getElementById('paper-candles-count').innerText = sessRes.candles_processed || 0;
+
+          if (sessRes.ema20 && sessRes.ema30) {
+            const isUp = sessRes.ema20 > sessRes.ema30;
+            document.getElementById('paper-trend').innerHTML = isUp
+              ? '<span style="color: var(--success); font-weight:600;">UPTREND (EMA20 > EMA30)</span>'
+              : '<span style="color: var(--danger); font-weight:600;">DOWNTREND (EMA20 < EMA30)</span>';
+          }
+
+          if (sessRes.last_candle) {
+            const lc = sessRes.last_candle;
+            document.getElementById('paper-last-candle').innerText = `${lc.timestamp} | O: $${lc.open.toFixed(2)} | H: $${lc.high.toFixed(2)} | L: $${lc.low.toFixed(2)} | C: $${lc.close.toFixed(2)}`;
+          }
+
+          const decEl = document.getElementById('paper-strategy-decision');
+          if (sessRes.pending_signal) {
+            decEl.className = 'badge';
+            decEl.style.color = 'var(--warning)';
+            decEl.style.borderColor = 'var(--warning)';
+            decEl.innerText = 'SETUP CONFIRMED — PENDING ENTRY ON NEXT BAR OPEN';
+          } else if (sessRes.active_positions > 0) {
+            decEl.className = 'badge';
+            decEl.style.color = 'var(--primary)';
+            decEl.style.borderColor = 'var(--primary)';
+            decEl.innerText = 'ACTIVE POSITION MONITORING';
+          } else {
+            decEl.className = 'badge';
+            decEl.style.color = 'var(--text-muted)';
+            decEl.style.borderColor = 'var(--border-color)';
+            decEl.innerText = 'MONITORING FOR EMA PULLBACK SETUP';
+          }
+
+          // Account metrics
+          const acct = sessRes.account || {};
+          document.getElementById('paper-equity').innerText = '$' + (acct.equity !== undefined ? acct.equity.toFixed(2) : '10,000.00');
+          document.getElementById('paper-cash').innerText = '$' + (acct.cash_balance !== undefined ? acct.cash_balance.toFixed(2) : '10,000.00');
+          const pnl = acct.realized_pnl || 0;
+          const pnlEl = document.getElementById('paper-realized-pnl');
+          pnlEl.innerText = (pnl >= 0 ? '+$' : '-$') + Math.abs(pnl).toFixed(2);
+          pnlEl.style.color = pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+          document.getElementById('paper-trade-count').innerText = acct.trade_count || 0;
+        }
+
+        // Active position
+        const posBox = document.getElementById('paper-position-details');
+        const closeBtn = document.getElementById('btn-close-position');
+        const positions = posRes.positions || [];
+        if (positions.length > 0) {
+          const p = positions[0];
+          closeBtn.style.display = 'inline-flex';
+          const uPnl = p.unrealized_pnl || 0;
+          posBox.innerHTML = `
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+              <div><span style="color:var(--text-muted); font-size:0.8rem;">Direction:</span> <strong>${p.direction}</strong></div>
+              <div><span style="color:var(--text-muted); font-size:0.8rem;">Size:</span> <strong>${p.quantity} BTC</strong></div>
+              <div><span style="color:var(--text-muted); font-size:0.8rem;">Entry Price:</span> <strong>$${p.entry_price.toFixed(2)}</strong></div>
+              <div><span style="color:var(--text-muted); font-size:0.8rem;">Stop Loss:</span> <strong style="color:var(--danger);">$${p.stop_price.toFixed(2)}</strong></div>
+              <div><span style="color:var(--text-muted); font-size:0.8rem;">Target (3R):</span> <strong style="color:var(--success);">$${p.target_price.toFixed(2)}</strong></div>
+              <div><span style="color:var(--text-muted); font-size:0.8rem;">Unrealized P&L:</span> <strong style="color:${uPnl >= 0 ? 'var(--success)' : 'var(--danger)'};">$${uPnl.toFixed(2)}</strong></div>
+            </div>
+          `;
+        } else {
+          closeBtn.style.display = 'none';
+          posBox.innerHTML = '<span style="color: var(--text-muted);">No open paper position. Monitoring completed candles.</span>';
+        }
+
+        // Trades table
+        const tbody = document.getElementById('paper-trades-tbody');
+        const trades = trdRes.trades || [];
+        if (trades.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: var(--text-muted);">No paper trades recorded yet.</td></tr>';
+        } else {
+          tbody.innerHTML = trades.map(t => `
+            <tr>
+              <td>${t.trade_id}</td>
+              <td><span class="badge" style="font-size:0.75rem;">${t.source || 'STRATEGY'}</span></td>
+              <td><strong>${t.direction}</strong></td>
+              <td>$${t.entry_price.toFixed(2)}</td>
+              <td>$${t.exit_price.toFixed(2)}</td>
+              <td>$${t.stop_price.toFixed(2)}</td>
+              <td>$${t.target_price.toFixed(2)}</td>
+              <td style="color:${t.net_pnl >= 0 ? 'var(--success)' : 'var(--danger)'}; font-weight:600;">$${t.net_pnl.toFixed(2)}</td>
+              <td>${t.r_multiple !== undefined ? t.r_multiple.toFixed(2) + 'R' : '--'}</td>
+              <td>${t.exit_reason || '-'}</td>
+            </tr>
+          `).join('');
+        }
+      } catch (e) {
+        console.error('Failed to load paper data:', e);
+      }
+    }
+
+    async function submitPaperOrder() {
+      const side = document.getElementById('paper-order-side').value;
+      const quantity = parseFloat(document.getElementById('paper-order-qty').value);
+      const stop_price = parseFloat(document.getElementById('paper-order-sl').value);
+      const target_price = parseFloat(document.getElementById('paper-order-tp').value);
+
+      if (!quantity || !stop_price || !target_price) {
+        alert('Please fill in quantity, stop loss, and take profit prices.');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/paper/order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ side, quantity, stop_price, target_price })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(`Simulated Paper Order FILLED: ${data.order.order_id} (${side} @ $${data.order.price})`);
+          loadPaperData();
+        } else {
+          alert('Order rejected: ' + (data.error || data.detail || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Failed to place paper order: ' + e.message);
+      }
+    }
+
+    async function closeActivePaperPosition() {
+      if (!confirm('Close active simulated paper position at current market price?')) return;
+      try {
+        const res = await fetch('/api/paper/position/close', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          alert(`Position closed. Net P&L: $${data.trade.net_pnl.toFixed(2)} (${data.trade.r_multiple.toFixed(2)}R)`);
+          loadPaperData();
+        } else {
+          alert('Failed to close position: ' + (data.error || data.detail || 'Unknown error'));
+        }
+      } catch (e) {
+        alert('Error closing position: ' + e.message);
+      }
+    }
+
+    // Initial check
+    loadModels();
+    checkStatus();
+    setInterval(checkStatus, 15000);
+  </script>
+</body>
+</html>

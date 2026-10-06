@@ -1,0 +1,14 @@
+{
+  "environment": "dev",
+  "execution_mode": "BACKTEST",
+  "risk": {
+    "max_risk_per_trade_pct": 0.01,
+    "max_open_positions": 1,
+    "account_balance": 10000.0,
+    "max_leverage": 1.0
+  },
+  "logging": {
+    "log_level": "INFO",
+    "log_format": "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  }
+}

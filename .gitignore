@@ -1,0 +1,113 @@
+# ================================
+# SECRETS & ENVIRONMENT VARIABLES
+# ================================
+.env
+.env.*
+!.env.example
+
+
+# ================================
+# PYTHON
+# ================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*$py.class
+*.so
+.Python
+
+# Build / Packaging
+build/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+
+
+# ================================
+# TESTING & COVERAGE
+# ================================
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+.mypy_cache/
+.ruff_cache/
+
+
+# ================================
+# NODE.JS
+# ================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+
+# ================================
+# FRONTEND BUILD
+# ================================
+dist/
+build/
+.vite/
+
+
+# ================================
+# IDE / EDITORS
+# ================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+
+
+# ================================
+# OPERATING SYSTEM
+# ================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+
+# ================================
+# LOGS
+# ================================
+*.log
+logs/
+
+
+# ================================
+# DATABASES / LOCAL DATA
+# ================================
+*.sqlite
+*.sqlite3
+*.db
+
+
+# ================================
+# TEMPORARY FILES
+# ================================
+*.tmp
+*.temp
+*.bak
+*.cache
